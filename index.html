@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人記帳系統 V2.0</title>
+    <title>個人記帳系統  V2.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f4f4f4;
             color: #333;
+            line-height: 1.6;
         }
         .container {
             max-width: 1000px;
@@ -24,7 +26,8 @@
             color: #333;
             text-align: center;
         }
-        /* --- Form & Quick Buttons --- */
+        
+        /* --- Form & Inputs --- */
         form {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -41,14 +44,28 @@
         .form-row label {
             flex: 0 0 70px;
             font-weight: bold;
+            color: #555;
         }
+        /* 統一輸入框與下拉選單的樣式 */
         .form-row input, .form-row select, .form-row textarea {
             flex: 1;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            font-size: 16px;
+            font-family: inherit;
         }
-        #otherCategoryInput { display: none; }
+        .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0,123,255,0.2);
+        }
+        /* 備註欄位特別處理：只能垂直拉伸 */
+        .form-row textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        #otherCategoryInput { display: none; margin-top: 10px; }
         .full-width { grid-column: 1 / -1; }
         
         button {
@@ -62,8 +79,9 @@
             transition: background-color 0.3s ease;
         }
         button:hover { background-color: #0056b3; }
-        .submit-btn { grid-column: 1 / -1; }
+        .submit-btn { grid-column: 1 / -1; font-weight: bold; }
 
+        /* --- Quick Buttons --- */
         .quick-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -72,6 +90,7 @@
             padding: 15px;
             background-color: #f0f8ff;
             border-radius: 6px;
+            border: 1px solid #d0e3f0;
         }
         .quick-buttons button {
             padding: 8px 12px;
@@ -80,31 +99,33 @@
         }
         .quick-buttons button.income-btn { background-color: #28a745; }
         .quick-buttons button.expense-btn { background-color: #dc3545; }
-        .quick-buttons button:hover { opacity: 0.8; }
+        .quick-buttons button:hover { opacity: 0.8; transform: translateY(-1px); }
 
         /* --- Summary & Budget --- */
         .month-selector, .data-actions {
             text-align: center;
             margin-bottom: 20px;
         }
-        .month-selector select { padding: 8px; font-size: 16px; border-radius: 4px; }
+        .month-selector select { padding: 8px 15px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; }
         .summary-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-around;
             text-align: center;
             margin-bottom: 20px;
-            gap: 10px;
+            gap: 15px;
         }
         .summary-box {
-            background: #e9ecef;
+            background: #f8f9fa;
             padding: 15px;
             border-radius: 6px;
+            border: 1px solid #e9ecef;
             flex: 1 1 180px;
         }
+        .summary-box h4 { margin: 0 0 10px 0; color: #666; }
         #incomeTotal, #expenseTotal, #balance, #budgetStatus {
             font-weight: bold;
-            font-size: 1.2em;
+            font-size: 1.4em;
         }
         .income { color: #28a745; }
         .expense { color: #dc3545; }
@@ -113,9 +134,9 @@
             justify-content: center;
             align-items: center;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
-        .budget-input-container input { max-width: 150px; }
+        .budget-input-container input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 150px; }
         .budget-input-container button { padding: 8px 15px; }
         .budget-warning { color: #dc3545; }
         .budget-ok { color: #28a745; }
@@ -129,36 +150,42 @@
             padding: 15px;
             background-color: #f9f9f9;
             border-radius: 6px;
+            border: 1px solid #eee;
         }
         .filter-container select, .filter-container input {
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            font-size: 14px;
         }
         #recordList {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
         #recordList li {
-            background: #f9f9f9;
+            background: #fff;
+            border: 1px solid #ddd;
             margin-bottom: 10px;
             padding: 15px;
-            border-radius: 4px;
+            border-radius: 6px;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            transition: background-color 0.3s;
+            transition: box-shadow 0.2s;
         }
-        #recordList li.editing { background-color: #ffeccf; }
+        #recordList li:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        #recordList li.editing { background-color: #fff9e6; border-color: #ffe082; }
         .record-info {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             gap: 5px;
         }
+        .record-info span { font-size: 15px; }
         .record-actions { display: flex; gap: 8px; align-items: center; }
-        .record-actions button { padding: 5px 10px; }
+        .record-actions button { padding: 6px 12px; font-size: 14px; }
         .delete-btn { background: #dc3545; }
         .edit-btn { background: #ffc107; color: #333; }
         .save-btn { background: #28a745; }
@@ -166,56 +193,69 @@
         
         /* Edit Mode Styles */
         .record-edit-input {
-            padding: 5px;
+            padding: 6px;
             border: 1px solid #007bff;
             border-radius: 3px;
             margin-right: 5px;
+            font-size: 14px;
         }
         .record-amount {
             font-weight: bold;
-            font-size: 1.1em;
-            padding-left: 20px;
+            font-size: 1.2em;
+            padding: 0 20px;
+            min-width: 120px;
+            text-align: right;
         }
 
-        /* --- Charts --- */
+        /* --- Charts (徹底解決無限變長 Bug) --- */
         .chart-container {
-            /* 現在只有圓餅圖，每列放兩個 */
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
             gap: 20px;
             margin-top: 30px;
         }
         .chart-box {
             background: #fff;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eee;
             position: relative;
         }
-        /* 修復標題重疊問題 */
         .chart-box h3 {
             margin-top: 0;
-            margin-bottom: 20px; 
-            padding-bottom: 5px;
+            margin-bottom: 15px; 
+            padding-bottom: 10px;
             border-bottom: 1px solid #eee;
+            font-size: 1.1em;
+            color: #555;
         }
-        
+        /* 這個容器是關鍵！鎖死高度，Chart.js 就不會亂跑 */
+        .canvas-container {
+            position: relative;
+            height: 220px; /* 固定圖表高度，您可以改這裡來調整圓餅圖大小 */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
         .no-chart-data {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             color: #888;
-            font-size: 1.1em;
+            font-size: 1em;
             text-align: center;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
         }
 
         @media (max-width: 768px) {
             form { grid-template-columns: 1fr; }
-            .form-row { flex-direction: column; align-items: flex-start; }
-            .form-row label { flex: 0 0 auto; margin-bottom: 5px; }
+            .form-row { flex-direction: column; align-items: stretch; }
+            .form-row label { margin-bottom: 5px; }
             .filter-container { grid-template-columns: repeat(2, 1fr); }
-            .chart-container { grid-template-columns: 1fr; }
+            #recordList li { flex-direction: column; align-items: stretch; gap: 15px; }
+            .record-amount { text-align: left; padding: 0; }
         }
     </style>
 </head>
@@ -244,25 +284,25 @@
             </div>
             <div class="form-row">
                 <label for="category">類別:</label>
-                <select id="category" required>
-                    <option value="飲食">飲食</option>
-                    <option value="住宿">住宿</option>
-                    <option value="日常用品">日常用品</option>
-                    <option value="零用錢">零用錢</option>
-                    <option value="醫療">醫療</option>
-                    <option value="交通">交通</option>
-                    <option value="娛樂">娛樂</option>
-                    <option value="薪資">薪資</option>
-                    <option value="投資">投資</option>
-                    <option value="其他">其他</option>
-                </select>
-            </div>
-            <div class="form-row full-width">
-                <input type="text" id="otherCategoryInput" placeholder="請輸入其他類別名稱">
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <select id="category" required>
+                        <option value="飲食">飲食</option>
+                        <option value="住宿">住宿</option>
+                        <option value="日常用品">日常用品</option>
+                        <option value="零用錢">零用錢</option>
+                        <option value="醫療">醫療</option>
+                        <option value="交通">交通</option>
+                        <option value="娛樂">娛樂</option>
+                        <option value="薪資">薪資</option>
+                        <option value="投資">投資</option>
+                        <option value="其他">其他...</option>
+                    </select>
+                    <input type="text" id="otherCategoryInput" placeholder="請輸入自訂類別名稱">
+                </div>
             </div>
             <div class="form-row full-width">
                 <label for="notes">備註:</label>
-                <textarea id="notes" placeholder="可選填備註"></textarea>
+                <textarea id="notes" placeholder="可選填備註..."></textarea>
             </div>
             
             <button type="submit" class="submit-btn">新增紀錄</button>
@@ -316,7 +356,7 @@
             </select>
             <select id="filterCategory">
                 <option value="">所有類別</option>
-                </select>
+            </select>
             <input type="text" id="filterKeyword" placeholder="備註/類別關鍵字">
             <select id="sortOrder">
                 <option value="dateDesc">日期(新→舊)</option>
@@ -324,29 +364,34 @@
                 <option value="amountDesc">金額(高→低)</option>
                 <option value="amountAsc">金額(低→高)</option>
             </select>
-            <button id="clearFiltersBtn">清除</button>
+            <button id="clearFiltersBtn">清除篩選</button>
         </div>
 
         <ul id="recordList">
             </ul>
         
         <div class="chart-container">
-            
             <div class="chart-box">
                 <h3>支出類別圓餅圖</h3>
-                <canvas id="expenseCategoryPieChart"></canvas>
+                <div class="canvas-container">
+                    <canvas id="expenseCategoryPieChart"></canvas>
+                </div>
                 <div id="noExpensePieData" class="no-chart-data" style="display:none;">本月無支出記錄</div>
             </div>
             
             <div class="chart-box">
                 <h3>收入類別圓餅圖</h3>
-                <canvas id="incomeCategoryPieChart"></canvas>
+                <div class="canvas-container">
+                    <canvas id="incomeCategoryPieChart"></canvas>
+                </div>
                 <div id="noIncomePieData" class="no-chart-data" style="display:none;">本月無收入記錄</div>
             </div>
             
             <div class="chart-box">
-                <h3>總收入與總支出圓餅圖</h3>
-                <canvas id="typePieChart"></canvas>
+                <h3>收支比例圓餅圖</h3>
+                <div class="canvas-container">
+                    <canvas id="typePieChart"></canvas>
+                </div>
                 <div id="noTypePieData" class="no-chart-data" style="display:none;">本月無記錄</div>
             </div>
         </div>
@@ -360,10 +405,10 @@
             const monthSelect = document.getElementById('monthSelect');
             const categorySelect = document.getElementById('category');
             const otherCategoryInput = document.getElementById('otherCategoryInput');
+            const recordTypeSelect = document.getElementById('recordType');
             const dateInput = document.getElementById('date');
             const quickButtonsContainer = document.getElementById('quickButtons');
 
-            // Summary Elements
             const incomeTotalEl = document.getElementById('incomeTotal');
             const expenseTotalEl = document.getElementById('expenseTotal');
             const balanceEl = document.getElementById('balance');
@@ -371,7 +416,6 @@
             const monthlyBudgetInput = document.getElementById('monthlyBudget');
             const setBudgetBtn = document.getElementById('setBudgetBtn');
             
-            // Filter Elements
             const filterTypeEl = document.getElementById('filterType');
             const filterCategoryEl = document.getElementById('filterCategory');
             const filterKeywordEl = document.getElementById('filterKeyword');
@@ -379,115 +423,112 @@
             const clearFiltersBtn = document.getElementById('clearFiltersBtn');
             const exportCsvBtn = document.getElementById('exportCsvBtn');
 
-            // Chart Variables
             let expenseCategoryPieChart, incomeCategoryPieChart, typePieChart;
 
-            // --- Data & Initialization ---
+            // --- Data Load ---
             let records = JSON.parse(localStorage.getItem('accountingRecords')) || [];
             let monthlyBudget = parseInt(localStorage.getItem('monthlyBudget')) || 0;
             const defaultCategories = ['飲食', '住宿', '日常用品', '零用錢', '醫療', '交通', '娛樂', '薪資', '投資', '其他'];
             
+            // --- Initialization ---
             const today = new Date();
-            dateInput.value = today.toISOString().split('T')[0];
+            // 處理時區問題，確保預設日期為本地正確日期
+            const localDateStr = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            dateInput.value = localDateStr;
             monthlyBudgetInput.value = monthlyBudget;
-            
-            // --- Helper Functions ---
 
-            // CSV Export
+            // 監聽類別選擇，如果是「其他」就顯示自訂輸入框
+            categorySelect.addEventListener('change', (e) => {
+                if (e.target.value === '其他') {
+                    otherCategoryInput.style.display = 'block';
+                    otherCategoryInput.required = true;
+                } else {
+                    otherCategoryInput.style.display = 'none';
+                    otherCategoryInput.required = false;
+                    otherCategoryInput.value = '';
+                }
+            });
+
+            // CSV 匯出
             function exportRecords() {
                 if (records.length === 0) {
                     alert("沒有任何紀錄可供匯出。");
                     return;
                 }
-                const header = ["日期", "類型", "類別", "金額", "備註", "ID"];
+                const header = ["日期", "類型", "類別", "金額", "備註"];
                 const csvRows = records.map(r => 
                     [
                         `"${r.date}"`,
                         `"${r.type === 'income' ? '收入' : '支出'}"`,
                         `"${r.category}"`,
                         r.amount,
-                        `"${r.notes ? r.notes.replace(/"/g, '""') : ''}"`, // 處理備註中的引號
-                        r.id
+                        `"${r.notes ? r.notes.replace(/"/g, '""') : ''}"`
                     ].join(',')
                 );
                 
                 const csvContent = [header.join(','), ...csvRows].join('\n');
-                
-                const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); // 加上 BOM 解決中文亂碼
+                const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = `Accounting_Records_${new Date().toISOString().split('T')[0]}.csv`;
+                link.download = `記帳紀錄_${localDateStr}.csv`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             }
 
-            // Category & Quick Button Setup
+            // 設定快速按鈕與篩選器選項
             function setupCategories() {
                 const uniqueCategories = [...new Set(records.map(r => r.category))];
                 const allCategories = [...new Set([...defaultCategories, ...uniqueCategories])];
 
-                // Update filter dropdown
+                // 準備篩選器的類別選單
                 filterCategoryEl.innerHTML = '<option value="">所有類別</option>';
                 allCategories.forEach(cat => {
-                    if (cat) {
-                         const option = document.createElement('option');
+                    if (cat && cat !== '其他') {
+                        const option = document.createElement('option');
                         option.value = cat;
                         option.textContent = cat;
                         filterCategoryEl.appendChild(option);
                     }
                 });
 
-                // Generate quick buttons
+                // 產生上方快速按鈕
                 quickButtonsContainer.innerHTML = '';
                 const quickSets = {
-                    '飲食': 'expense', '住宿': 'expense', '日常用品': 'expense', 
-                    '薪資': 'income', '零用錢': 'income', '投資': 'income'
+                    '飲食': 'expense', '交通': 'expense', '日常用品': 'expense', 
+                    '薪資': 'income'
                 };
                 
-                // Add default quick buttons
                 for (const [cat, type] of Object.entries(quickSets)) {
                     const btn = document.createElement('button');
                     btn.textContent = `${type === 'income' ? '➕' : '➖'} ${cat}`;
                     btn.className = `${type}-btn`;
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        document.getElementById('recordType').value = type;
+                    btn.type = "button";
+                    btn.addEventListener('click', () => {
+                        recordTypeSelect.value = type;
                         categorySelect.value = cat;
                         otherCategoryInput.style.display = 'none';
+                        otherCategoryInput.required = false;
+                        document.getElementById('amount').focus();
                     });
                     quickButtonsContainer.appendChild(btn);
                 }
-
-                // Add button for other/custom categories
-                const otherCatBtn = document.createElement('button');
-                otherCatBtn.textContent = `...其他`;
-                otherCatBtn.className = `expense-btn`;
-                otherCatBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.getElementById('recordType').value = 'expense';
-                    categorySelect.value = '其他';
-                    otherCategoryInput.style.display = 'block';
-                    otherCategoryInput.focus();
-                });
-                quickButtonsContainer.appendChild(otherCatBtn);
             }
 
-            // Initialize Month Selector
+            // 初始化月份選單
             function initializeMonthSelector() {
                 monthSelect.innerHTML = '';
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
 
-                // Generate options for the past year and next month
                 for (let i = -12; i <= 1; i++) { 
                     const date = new Date(currentYear, currentMonth + i, 1);
                     const year = date.getFullYear();
                     const month = date.getMonth() + 1;
                     const option = document.createElement('option');
                     option.value = `${year}-${month.toString().padStart(2, '0')}`;
-                    option.textContent = `${year}年${month}月`;
+                    option.textContent = `${year}年 ${month}月`;
                     monthSelect.appendChild(option);
                 }
                 monthSelect.value = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
@@ -496,38 +537,36 @@
                     updateSummaryAndCharts();
                 });
             }
-
-            // --- Core Logic ---
             
-            // Save Budget
+            // 設定預算
             setBudgetBtn.addEventListener('click', () => {
                 const newBudget = parseInt(monthlyBudgetInput.value);
                 if (newBudget >= 0) {
                     monthlyBudget = newBudget;
                     localStorage.setItem('monthlyBudget', monthlyBudget);
-                    alert(`每月支出預算已設定為 $${monthlyBudget.toLocaleString()}`);
+                    alert(`預算已更新為 $${monthlyBudget.toLocaleString()}`);
                     updateSummaryAndCharts();
                 } else {
-                    alert("請輸入有效的預算金額。");
+                    alert("請輸入有效的預算。");
                 }
             });
 
-            // Handle New Record Submission
+            // 新增紀錄送出
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
 
-                const recordType = document.getElementById('recordType').value;
+                const recordType = recordTypeSelect.value;
                 const amount = parseFloat(document.getElementById('amount').value);
                 let category = categorySelect.value;
                 const notes = document.getElementById('notes').value;
                 const date = document.getElementById('date').value;
 
                 if (category === '其他') {
-                    category = otherCategoryInput.value || '其他';
+                    category = otherCategoryInput.value.trim() || '其他';
                 }
 
                 if (isNaN(amount) || amount <= 0) {
-                    alert('請輸入有效的金額！');
+                    alert('請輸入大於0的金額！');
                     return;
                 }
 
@@ -540,18 +579,23 @@
                     date: date,
                 };
                 
-                records.unshift(newRecord); // Add to the top
+                records.unshift(newRecord);
                 localStorage.setItem('accountingRecords', JSON.stringify(records));
 
+                // 重設表單，但保留日期
+                const savedDate = dateInput.value;
                 form.reset();
+                dateInput.value = savedDate;
+                
                 otherCategoryInput.style.display = 'none';
-                dateInput.value = today.toISOString().split('T')[0];
-                setupCategories(); // Refresh categories in case a new one was added
+                otherCategoryInput.required = false;
+                
+                setupCategories();
                 applyFiltersAndSort();
                 updateSummaryAndCharts();
             });
 
-            // Delete Record
+            // 刪除紀錄
             window.deleteRecord = function(id) {
                 if (confirm('確定要刪除這筆紀錄嗎？')) {
                     records = records.filter(record => record.id !== id);
@@ -562,64 +606,56 @@
                 }
             };
             
-            // Edit Record: Toggle inline form
+            // 編輯紀錄 (展開編輯表單)
             window.editRecord = function(id) {
                 const li = document.querySelector(`#recordList li[data-id="${id}"]`);
-                // Check if any other record is currently being edited
+                
                 document.querySelectorAll('.editing').forEach(el => {
-                    if (el !== li) {
-                        el.classList.remove('editing');
-                        // Re-render the non-editing list items to revert the form
-                        // Simplest way is a partial re-render or re-render all for safety.
-                        applyFiltersAndSort(); 
-                    }
+                    if (el !== li) el.classList.remove('editing');
                 });
+                applyFiltersAndSort(); // 重新渲染列表以取消其他編輯狀態
 
-                if (li.classList.contains('editing')) {
-                    // Cancel editing
-                    li.classList.remove('editing');
-                    applyFiltersAndSort(); // Re-render to restore original content
-                } else {
-                    // Start editing
-                    li.classList.add('editing');
-                    const record = records.find(r => r.id === id);
+                const record = records.find(r => r.id === id);
+                if (!record) return;
 
-                    li.innerHTML = `
-                        <div class="record-info">
-                            <label>日期: <input type="date" value="${record.date}" id="edit-date-${id}" class="record-edit-input"></label>
-                            <label>類型: 
-                                <select id="edit-type-${id}" class="record-edit-input">
-                                    <option value="expense" ${record.type === 'expense' ? 'selected' : ''}>支出</option>
-                                    <option value="income" ${record.type === 'income' ? 'selected' : ''}>收入</option>
-                                </select>
-                            </label>
-                            <label>類別: <input type="text" value="${record.category}" id="edit-category-${id}" class="record-edit-input"></label>
-                            <label>備註: <textarea id="edit-notes-${id}" class="record-edit-input">${record.notes || ''}</textarea></label>
+                // 重新抓取一次 DOM，因為剛剛重新渲染過了
+                const targetLi = document.querySelector(`#recordList li[data-id="${id}"]`);
+                targetLi.classList.add('editing');
+
+                targetLi.innerHTML = `
+                    <div class="record-info" style="width: 100%;">
+                        <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+                            <input type="date" value="${record.date}" id="edit-date-${id}" class="record-edit-input">
+                            <select id="edit-type-${id}" class="record-edit-input">
+                                <option value="expense" ${record.type === 'expense' ? 'selected' : ''}>支出</option>
+                                <option value="income" ${record.type === 'income' ? 'selected' : ''}>收入</option>
+                            </select>
+                            <input type="text" value="${record.category}" id="edit-category-${id}" class="record-edit-input" placeholder="類別">
+                            <input type="number" value="${record.amount}" id="edit-amount-${id}" class="record-edit-input" min="1" placeholder="金額" style="width: 100px;">
                         </div>
-                        <div class="record-amount">
-                            $<input type="number" value="${record.amount}" id="edit-amount-${id}" class="record-edit-input" min="1" style="width: 100px;">
-                        </div>
-                        <div class="record-actions">
+                        <textarea id="edit-notes-${id}" class="record-edit-input" style="width:100%; resize:vertical; min-height:50px;" placeholder="備註">${record.notes || ''}</textarea>
+                        
+                        <div class="record-actions" style="margin-top: 10px; justify-content: flex-end;">
                             <button class="save-btn" onclick="saveRecord(${id})">儲存</button>
-                            <button class="cancel-btn" onclick="editRecord(${id})">取消</button>
+                            <button class="cancel-btn" onclick="applyFiltersAndSort()">取消</button>
                         </div>
-                    `;
-                }
+                    </div>
+                `;
             };
 
-            // Save Edited Record
+            // 儲存編輯紀錄
             window.saveRecord = function(id) {
                 const index = records.findIndex(r => r.id === id);
                 if (index === -1) return;
 
                 const newAmount = parseFloat(document.getElementById(`edit-amount-${id}`).value);
                 const newType = document.getElementById(`edit-type-${id}`).value;
-                const newCategory = document.getElementById(`edit-category-${id}`).value;
+                const newCategory = document.getElementById(`edit-category-${id}`).value.trim();
                 const newNotes = document.getElementById(`edit-notes-${id}`).value;
                 const newDate = document.getElementById(`edit-date-${id}`).value;
 
-                if (isNaN(newAmount) || newAmount <= 0) {
-                    alert('請輸入有效的金額！');
+                if (isNaN(newAmount) || newAmount <= 0 || !newCategory) {
+                    alert('請確認金額大於0且類別已填寫！');
                     return;
                 }
 
@@ -638,60 +674,47 @@
                 updateSummaryAndCharts();
             };
 
-            // Apply Filters and Sort to the record list
+            // 篩選與排序邏輯
             function applyFiltersAndSort() {
                 const currentMonthValue = monthSelect.value;
                 const [year, month] = currentMonthValue.split('-').map(Number);
+                
                 const filterType = filterTypeEl.value;
                 const filterCategory = filterCategoryEl.value;
                 const filterKeyword = filterKeywordEl.value.toLowerCase();
                 const sortOrder = sortOrderEl.value;
 
-                let filteredRecords = records;
-
-                // 1. Filter by Selected Month
-                filteredRecords = filteredRecords.filter(record => {
-                    const recordDate = new Date(record.date);
-                    // Use getMonth() + 1 because recordDate.getMonth() is 0-indexed
-                    return recordDate.getFullYear() === year && recordDate.getMonth() + 1 === month;
+                let filtered = records.filter(record => {
+                    const d = new Date(record.date);
+                    return d.getFullYear() === year && d.getMonth() + 1 === month;
                 });
                 
-                // 2. Apply Filters
-                if (filterType) {
-                    filteredRecords = filteredRecords.filter(r => r.type === filterType);
-                }
-                if (filterCategory) {
-                    filteredRecords = filteredRecords.filter(r => r.category === filterCategory);
-                }
+                if (filterType) filtered = filtered.filter(r => r.type === filterType);
+                if (filterCategory) filtered = filtered.filter(r => r.category === filterCategory);
                 if (filterKeyword) {
-                    filteredRecords = filteredRecords.filter(r => 
+                    filtered = filtered.filter(r => 
                         r.category.toLowerCase().includes(filterKeyword) || 
                         (r.notes && r.notes.toLowerCase().includes(filterKeyword))
                     );
                 }
 
-                // 3. Apply Sorting
-                filteredRecords.sort((a, b) => {
-                    if (sortOrder === 'dateDesc') {
-                        return new Date(b.date) - new Date(a.date);
-                    } else if (sortOrder === 'dateAsc') {
-                        return new Date(a.date) - new Date(b.date);
-                    } else if (sortOrder === 'amountDesc') {
-                        return b.amount - a.amount;
-                    } else if (sortOrder === 'amountAsc') {
-                        return a.amount - b.amount;
-                    }
+                filtered.sort((a, b) => {
+                    if (sortOrder === 'dateDesc') return new Date(b.date) - new Date(a.date);
+                    if (sortOrder === 'dateAsc') return new Date(a.date) - new Date(b.date);
+                    if (sortOrder === 'amountDesc') return b.amount - a.amount;
+                    if (sortOrder === 'amountAsc') return a.amount - b.amount;
                     return 0;
                 });
 
-                renderRecords(filteredRecords);
+                renderRecords(filtered);
             }
 
-            // Attach Filter/Sort Handlers
+            // 綁定篩選器事件
             [filterTypeEl, filterCategoryEl, filterKeywordEl, sortOrderEl].forEach(el => {
                 el.addEventListener('change', applyFiltersAndSort);
                 el.addEventListener('input', applyFiltersAndSort);
             });
+            
             clearFiltersBtn.addEventListener('click', () => {
                 filterTypeEl.value = '';
                 filterCategoryEl.value = '';
@@ -699,27 +722,32 @@
                 sortOrderEl.value = 'dateDesc';
                 applyFiltersAndSort();
             });
+            
             exportCsvBtn.addEventListener('click', exportRecords);
 
-
-            // Render Records (Filtered/Sorted List)
+            // 渲染列表 HTML
             function renderRecords(list) {
                 recordList.innerHTML = '';
+                if (list.length === 0) {
+                    recordList.innerHTML = '<li style="justify-content:center; color:#888;">本月尚無符合紀錄</li>';
+                    return;
+                }
+
                 list.forEach(record => {
                     const li = document.createElement('li');
-                    li.dataset.id = record.id; // For easy editing/deletion
-                    const formattedDate = new Date(record.date).toLocaleDateString('zh-TW');
+                    li.dataset.id = record.id;
                     const typeText = record.type === 'income' ? '收入' : '支出';
                     const amountClass = record.type === 'income' ? 'income' : 'expense';
+                    const sign = record.type === 'income' ? '+' : '-';
 
                     li.innerHTML = `
                         <div class="record-info">
-                            <span>**${formattedDate}** (${typeText})</span>
-                            <span>類別: ${record.category}</span>
-                            <span>備註: ${record.notes || '無'}</span>
+                            <span>📅 <strong>${record.date}</strong> <span style="color:#888; font-size:13px;">(${typeText})</span></span>
+                            <span>🏷️ 類別: ${record.category}</span>
+                            ${record.notes ? `<span style="color:#666;">📝 備註: ${record.notes}</span>` : ''}
                         </div>
                         <div class="record-amount ${amountClass}">
-                            $${record.amount.toLocaleString()}
+                            ${sign} $${record.amount.toLocaleString()}
                         </div>
                         <div class="record-actions">
                             <button class="edit-btn" onclick="editRecord(${record.id})">編輯</button>
@@ -730,140 +758,122 @@
                 });
             }
 
-
-            // Update Summary, Budget, and Charts for the current month view
+            // 更新統計看板與圖表
             function updateSummaryAndCharts() {
                 const currentMonthValue = monthSelect.value;
                 const [year, month] = currentMonthValue.split('-').map(Number);
 
                 const currentMonthRecords = records.filter(record => {
-                    const recordDate = new Date(record.date);
-                    return recordDate.getFullYear() === year && recordDate.getMonth() + 1 === month;
+                    const d = new Date(record.date);
+                    return d.getFullYear() === year && d.getMonth() + 1 === month;
                 });
 
-                const incomeTotal = currentMonthRecords
-                    .filter(r => r.type === 'income')
-                    .reduce((sum, r) => sum + r.amount, 0);
-
-                const expenseTotal = currentMonthRecords
-                    .filter(r => r.type === 'expense')
-                    .reduce((sum, r) => sum + r.amount, 0);
+                let incomeTotal = 0;
+                let expenseTotal = 0;
+                
+                currentMonthRecords.forEach(r => {
+                    if (r.type === 'income') incomeTotal += r.amount;
+                    else expenseTotal += r.amount;
+                });
 
                 const balance = incomeTotal - expenseTotal;
                 const budgetRemaining = monthlyBudget - expenseTotal;
 
-                // Update Summary DOM
-                incomeTotalEl.textContent = incomeTotal.toLocaleString();
-                expenseTotalEl.textContent = expenseTotal.toLocaleString();
-                balanceEl.textContent = balance.toLocaleString();
+                incomeTotalEl.textContent = `$${incomeTotal.toLocaleString()}`;
+                expenseTotalEl.textContent = `$${expenseTotal.toLocaleString()}`;
+                balanceEl.textContent = `$${balance.toLocaleString()}`;
+                balanceEl.style.color = balance < 0 ? '#dc3545' : '#333';
 
-                // Update Budget Status DOM
                 if (monthlyBudget > 0) {
                     budgetStatusEl.textContent = `$${budgetRemaining.toLocaleString()}`;
-                    if (budgetRemaining < 0) {
-                        budgetStatusEl.className = 'budget-warning';
-                    } else {
-                        budgetStatusEl.className = 'budget-ok';
-                    }
+                    budgetStatusEl.className = budgetRemaining < 0 ? 'budget-warning' : 'budget-ok';
                 } else {
                     budgetStatusEl.textContent = '未設定';
                     budgetStatusEl.className = '';
                 }
 
-                // Update Charts
                 updateCharts(currentMonthRecords, incomeTotal, expenseTotal);
             }
 
-            // Update all charts (Pie charts only)
+            // 更新 Chart.js 圖表
             function updateCharts(data, incomeTotal, expenseTotal) {
-                const pieColors = [
-                    '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40', '#6666ff', '#58c9b9', '#ff8484', '#a1c181'
-                ];
+                const pieColors = ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40', '#6666ff', '#58c9b9', '#ff8484', '#a1c181'];
+                
+                // 這是確保圖表不會無窮放大的核心設定
+                const chartOptions = { 
+                    responsive: true, 
+                    maintainAspectRatio: false, // 搭配 CSS 的固定高度，完美限制大小
+                    plugins: {
+                        legend: { position: 'right' } // 將圖例放右邊，視覺上更緊湊
+                    }
+                };
 
-                // --- 1. Expense Category Pie Chart ---
-                const expenseCategoryData = data.filter(r => r.type === 'expense');
-                const expenseCategories = [...new Set(expenseCategoryData.map(r => r.category))].filter(cat => 
-                    expenseCategoryData.some(r => r.category === cat && r.amount > 0)
-                );
-                const expenseAmounts = expenseCategories.map(cat => 
-                    expenseCategoryData.filter(r => r.category === cat).reduce((sum, r) => sum + r.amount, 0)
+                // --- 1. Expense Pie ---
+                const expenseData = data.filter(r => r.type === 'expense');
+                const expCategories = [...new Set(expenseData.map(r => r.category))];
+                const expAmounts = expCategories.map(cat => 
+                    expenseData.filter(r => r.category === cat).reduce((sum, r) => sum + r.amount, 0)
                 );
                 
-                const hasExpensePieData = expenseAmounts.some(amount => amount > 0);
-                document.getElementById('expenseCategoryPieChart').style.display = hasExpensePieData ? 'block' : 'none';
-                document.getElementById('noExpensePieData').style.display = hasExpensePieData ? 'none' : 'block';
+                document.getElementById('noExpensePieData').style.display = expAmounts.length > 0 ? 'none' : 'block';
                 if (expenseCategoryPieChart) expenseCategoryPieChart.destroy();
-                if (hasExpensePieData) {
-                    const ctxExpensePie = document.getElementById('expenseCategoryPieChart').getContext('2d');
-                    expenseCategoryPieChart = new Chart(ctxExpensePie, {
-                        type: 'pie',
+                
+                if (expAmounts.length > 0) {
+                    expenseCategoryPieChart = new Chart(document.getElementById('expenseCategoryPieChart').getContext('2d'), {
+                        type: 'doughnut', // 改成環形圖看起來更現代一點
                         data: {
-                            labels: expenseCategories,
-                            datasets: [{
-                                data: expenseAmounts,
-                                backgroundColor: expenseCategories.map((_, i) => pieColors[i % pieColors.length]),
-                                hoverOffset: 4
-                            }]
+                            labels: expCategories,
+                            datasets: [{ data: expAmounts, backgroundColor: pieColors }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false }
+                        options: chartOptions
                     });
                 }
 
-                // --- 2. Income Category Pie Chart ---
-                const incomeCategoryData = data.filter(r => r.type === 'income');
-                const incomeCategories = [...new Set(incomeCategoryData.map(r => r.category))].filter(cat =>
-                    incomeCategoryData.some(r => r.category === cat && r.amount > 0)
+                // --- 2. Income Pie ---
+                const incomeData = data.filter(r => r.type === 'income');
+                const incCategories = [...new Set(incomeData.map(r => r.category))];
+                const incAmounts = incCategories.map(cat => 
+                    incomeData.filter(r => r.category === cat).reduce((sum, r) => sum + r.amount, 0)
                 );
-                const incomeAmounts = incomeCategories.map(cat =>
-                    incomeCategoryData.filter(r => r.category === cat).reduce((sum, r) => sum + r.amount, 0)
-                );
-                const hasIncomePieData = incomeAmounts.some(amount => amount > 0);
-                document.getElementById('incomeCategoryPieChart').style.display = hasIncomePieData ? 'block' : 'none';
-                document.getElementById('noIncomePieData').style.display = hasIncomePieData ? 'none' : 'block';
+                
+                document.getElementById('noIncomePieData').style.display = incAmounts.length > 0 ? 'none' : 'block';
                 if (incomeCategoryPieChart) incomeCategoryPieChart.destroy();
-                if (hasIncomePieData) {
-                    const ctxIncomePie = document.getElementById('incomeCategoryPieChart').getContext('2d');
-                    incomeCategoryPieChart = new Chart(ctxIncomePie, {
-                        type: 'pie',
+                
+                if (incAmounts.length > 0) {
+                    incomeCategoryPieChart = new Chart(document.getElementById('incomeCategoryPieChart').getContext('2d'), {
+                        type: 'doughnut',
                         data: {
-                            labels: incomeCategories,
-                            datasets: [{
-                                data: incomeAmounts,
-                                backgroundColor: incomeCategories.map((_, i) => pieColors[i % pieColors.length]),
-                                hoverOffset: 4
-                            }]
+                            labels: incCategories,
+                            datasets: [{ data: incAmounts, backgroundColor: pieColors }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false }
+                        options: chartOptions
                     });
                 }
 
-                // --- 3. Total Type Pie Chart (Income vs Expense) ---
-                const hasTypePieData = incomeTotal > 0 || expenseTotal > 0;
-                document.getElementById('typePieChart').style.display = hasTypePieData ? 'block' : 'none';
-                document.getElementById('noTypePieData').style.display = hasTypePieData ? 'none' : 'block';
+                // --- 3. Total Pie ---
+                document.getElementById('noTypePieData').style.display = (incomeTotal > 0 || expenseTotal > 0) ? 'none' : 'block';
                 if (typePieChart) typePieChart.destroy();
-                if (hasTypePieData) {
-                    const ctxPie = document.getElementById('typePieChart').getContext('2d');
-                    typePieChart = new Chart(ctxPie, {
+                
+                if (incomeTotal > 0 || expenseTotal > 0) {
+                    typePieChart = new Chart(document.getElementById('typePieChart').getContext('2d'), {
                         type: 'pie',
                         data: {
-                            labels: ['收入', '支出'],
+                            labels: ['總收入', '總支出'],
                             datasets: [{
                                 data: [incomeTotal, expenseTotal],
-                                backgroundColor: ['#28a745', '#dc3545'],
-                                hoverOffset: 4
+                                backgroundColor: ['#28a745', '#dc3545']
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false }
+                        options: chartOptions
                     });
                 }
             }
 
-            // --- Initialization Call ---
+            // --- 啟動初始化 ---
             setupCategories();
             initializeMonthSelector();
-            applyFiltersAndSort(); // This calls renderRecords
-            updateSummaryAndCharts(); // This calls updateCharts
+            applyFiltersAndSort(); 
+            updateSummaryAndCharts();
         });
     </script>
 </body>
