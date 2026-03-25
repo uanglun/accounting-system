@@ -2,240 +2,225 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人記帳系統  V2.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>記帳系統</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px 10px;
+            background-color: #f0f2f5;
             color: #333;
-            line-height: 1.6;
+            line-height: 1.5;
         }
         .container {
-            max-width: 1000px;
+            max-width: 900px;
             margin: auto;
             background: #fff;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        h1, h2, h3 {
-            color: #333;
-            text-align: center;
-        }
+        h1, h2, h3 { color: #1a1a1a; text-align: center; margin-top: 0; }
+        h2 { font-size: 1.3em; padding-bottom: 10px; border-bottom: 2px solid #f0f2f5; margin-top: 20px; }
         
         /* --- Form & Inputs --- */
         form {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #eee;
         }
         .form-row {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .form-row label {
-            flex: 0 0 70px;
-            font-weight: bold;
-            color: #555;
-        }
-        /* 統一輸入框與下拉選單的樣式 */
-        .form-row input, .form-row select, .form-row textarea {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-            font-family: inherit;
-        }
-        .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
-            border-color: #007bff;
-            outline: none;
-            box-shadow: 0 0 5px rgba(0,123,255,0.2);
-        }
-        /* 備註欄位特別處理：只能垂直拉伸 */
-        .form-row textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        #otherCategoryInput { display: none; margin-top: 10px; }
-        .full-width { grid-column: 1 / -1; }
-        
-        button {
-            padding: 12px 20px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-        }
-        button:hover { background-color: #0056b3; }
-        .submit-btn { grid-column: 1 / -1; font-weight: bold; }
-
-        /* --- Quick Buttons --- */
-        .quick-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f0f8ff;
-            border-radius: 6px;
-            border: 1px solid #d0e3f0;
-        }
-        .quick-buttons button {
-            padding: 8px 12px;
-            font-size: 14px;
-            background-color: #6c757d;
-        }
-        .quick-buttons button.income-btn { background-color: #28a745; }
-        .quick-buttons button.expense-btn { background-color: #dc3545; }
-        .quick-buttons button:hover { opacity: 0.8; transform: translateY(-1px); }
-
-        /* --- Summary & Budget --- */
-        .month-selector, .data-actions {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .month-selector select { padding: 8px 15px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; }
-        .summary-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            text-align: center;
-            margin-bottom: 20px;
-            gap: 15px;
-        }
-        .summary-box {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            border: 1px solid #e9ecef;
-            flex: 1 1 180px;
-        }
-        .summary-box h4 { margin: 0 0 10px 0; color: #666; }
-        #incomeTotal, #expenseTotal, #balance, #budgetStatus {
-            font-weight: bold;
-            font-size: 1.4em;
-        }
-        .income { color: #28a745; }
-        .expense { color: #dc3545; }
-        .budget-input-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .budget-input-container input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 150px; }
-        .budget-input-container button { padding: 8px 15px; }
-        .budget-warning { color: #dc3545; }
-        .budget-ok { color: #28a745; }
-
-        /* --- Filter & List --- */
-        .filter-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr) 100px;
-            gap: 10px;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 6px;
-            border: 1px solid #eee;
-        }
-        .filter-container select, .filter-container input {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        #recordList {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        #recordList li {
-            background: #fff;
-            border: 1px solid #ddd;
-            margin-bottom: 10px;
-            padding: 15px;
-            border-radius: 6px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            transition: box-shadow 0.2s;
-        }
-        #recordList li:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        #recordList li.editing { background-color: #fff9e6; border-color: #ffe082; }
-        .record-info {
-            flex-grow: 1;
             display: flex;
             flex-direction: column;
             gap: 5px;
         }
-        .record-info span { font-size: 15px; }
-        .record-actions { display: flex; gap: 8px; align-items: center; }
-        .record-actions button { padding: 6px 12px; font-size: 14px; }
+        .form-row label {
+            font-weight: bold;
+            color: #555;
+            font-size: 0.95em;
+        }
+        .form-row input, .form-row select, .form-row textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px; /* 防止 iOS 縮放 */
+            font-family: inherit;
+            background-color: #fafafa;
+        }
+        .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+            border-color: #007bff;
+            outline: none;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        .form-row textarea { resize: vertical; min-height: 80px; }
+        #otherCategoryInput { display: none; margin-top: 8px; }
+        .full-width { grid-column: 1 / -1; }
+        
+        button {
+            padding: 14px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        button:hover { background-color: #0056b3; }
+        .submit-btn { width: 100%; grid-column: 1 / -1; background-color: #007bff; }
+
+        /* --- Summary & Budget --- */
+        .controls-top {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .controls-top select, .controls-top input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .budget-group { display: flex; gap: 8px; align-items: center; }
+        .budget-group button { padding: 10px 15px; font-size: 14px; }
+
+        .summary-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .summary-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+        .summary-box h4 { margin: 0 0 5px 0; color: #666; font-size: 0.9em; }
+        .summary-val { font-weight: bold; font-size: 1.3em; }
+        .income { color: #28a745; }
+        .expense { color: #dc3545; }
+
+        /* --- Filter & List --- */
+        .filter-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .filter-container select, .filter-container input {
+            padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; width: 100%;
+        }
+        .filter-container button { padding: 10px; font-size: 15px; background: #6c757d; }
+
+        #recordList { list-style: none; padding: 0; margin: 0; }
+        #recordList li {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column; /* 預設為手機直式卡片 */
+            gap: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        #recordList li.editing { background-color: #fffaf0; border-color: #ffc107; }
+
+        .record-info { display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+        .record-info-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
+        .record-date { font-weight: bold; color: #333; }
+        .record-amount { font-weight: bold; font-size: 1.4em; }
+        .record-type-badge {
+            font-size: 0.8em;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #eee;
+            color: #666;
+            margin-left: 8px;
+        }
+        
+        .record-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .record-actions button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 6px;
+            flex: 1; /* 手機版按鈕撐滿 */
+        }
+        .edit-btn { background: #ffc107; color: #000; }
         .delete-btn { background: #dc3545; }
-        .edit-btn { background: #ffc107; color: #333; }
         .save-btn { background: #28a745; }
         .cancel-btn { background: #6c757d; }
-        
+
+        .data-actions { text-align: center; margin-bottom: 25px; }
+        .data-actions button { background: #17a2b8; width: auto; min-width: 200px; padding: 12px; }
+
         /* Edit Mode Styles */
-        .record-edit-input {
-            padding: 6px;
-            border: 1px solid #007bff;
-            border-radius: 3px;
-            margin-right: 5px;
-            font-size: 14px;
-        }
-        .record-amount {
-            font-weight: bold;
-            font-size: 1.2em;
-            padding: 0 20px;
-            min-width: 120px;
-            text-align: right;
+        .edit-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .edit-row input, .edit-row select, .edit-row textarea {
+            padding: 10px; font-size: 16px; border: 1px solid #007bff; border-radius: 6px; width: 100%;
         }
 
-        /* --- Charts (徹底解決無限變長 Bug) --- */
+        /* --- Charts (徹底解決重疊與破版問題) --- */
         .chart-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 25px;
             margin-top: 30px;
         }
         .chart-box {
             background: #fff;
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 12px;
             border: 1px solid #eee;
-            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column; /* 讓標題和圖表垂直排列，不再重疊 */
+            align-items: center;
+            position: relative; /* 重要定位點 */
+            height: 380px; /* 固定卡片總高度 */
         }
         .chart-box h3 {
-            margin-top: 0;
-            margin-bottom: 15px; 
+            margin: 0 0 20px 0;
             padding-bottom: 10px;
             border-bottom: 1px solid #eee;
             font-size: 1.1em;
-            color: #555;
+            color: #444;
+            width: 100%;
+            text-align: center;
         }
-        /* 這個容器是關鍵！鎖死高度，Chart.js 就不會亂跑 */
         .canvas-container {
             position: relative;
-            height: 220px; /* 固定圖表高度，您可以改這裡來調整圓餅圖大小 */
             width: 100%;
+            height: 250px; /* 強制鎖死圖表高度 */
             display: flex;
             justify-content: center;
+            align-items: center;
         }
         .no-chart-data {
             position: absolute;
@@ -244,47 +229,49 @@
             transform: translate(-50%, -50%);
             color: #888;
             font-size: 1em;
-            text-align: center;
-            background: rgba(255,255,255,0.9);
-            padding: 10px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 10; /* 確保無資料提示蓋在上面 */
         }
 
-        @media (max-width: 768px) {
-            form { grid-template-columns: 1fr; }
-            .form-row { flex-direction: column; align-items: stretch; }
-            .form-row label { margin-bottom: 5px; }
-            .filter-container { grid-template-columns: repeat(2, 1fr); }
-            #recordList li { flex-direction: column; align-items: stretch; gap: 15px; }
-            .record-amount { text-align: left; padding: 0; }
+        /* 桌機板微調 (>= 768px) */
+        @media (min-width: 768px) {
+            body { padding: 40px 20px; }
+            .container { padding: 40px; }
+            .submit-btn { width: auto; justify-self: center; min-width: 250px; }
+            #recordList li { flex-direction: row; align-items: stretch; justify-content: space-between; }
+            .record-info { flex: 1; margin-right: 20px; }
+            .record-info-top { border-bottom: none; padding-bottom: 0; margin-bottom: 0; justify-content: flex-start; }
+            .record-amount-container {
+                display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; width: 150px;
+            }
+            .record-actions { margin-top: 0; }
+            .record-actions button { flex: none; width: 80px; }
+            .edit-row { flex-direction: row; flex-wrap: wrap; }
+            .edit-row > * { flex: 1 1 150px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>個人記帳系統 V2.0</h1>
+        <h1>記帳系統</h1>
         
-        <div class="quick-buttons" id="quickButtons">
-            </div>
-
         <form id="accountingForm">
             <div class="form-row">
-                <label for="recordType">類型:</label>
+                <label for="recordType">類型</label>
                 <select id="recordType" required>
                     <option value="expense">支出</option>
                     <option value="income">收入</option>
                 </select>
             </div>
             <div class="form-row">
-                <label for="date">日期:</label>
+                <label for="date">日期</label>
                 <input type="date" id="date" required>
             </div>
             <div class="form-row">
-                <label for="amount">金額:</label>
-                <input type="number" id="amount" placeholder="輸入金額" required min="1">
-            </div>
-            <div class="form-row">
-                <label for="category">類別:</label>
-                <div style="flex: 1; display: flex; flex-direction: column;">
+                <label for="category">類別</label>
+                <div style="display:flex; flex-direction:column;">
                     <select id="category" required>
                         <option value="飲食">飲食</option>
                         <option value="住宿">住宿</option>
@@ -297,72 +284,73 @@
                         <option value="投資">投資</option>
                         <option value="其他">其他...</option>
                     </select>
-                    <input type="text" id="otherCategoryInput" placeholder="請輸入自訂類別名稱">
+                    <input type="text" id="otherCategoryInput" placeholder="請輸入自訂類別">
                 </div>
             </div>
+            <div class="form-row">
+                <label for="amount">金額</label>
+                <input type="number" id="amount" placeholder="輸入金額" required min="1" inputmode="numeric">
+            </div>
             <div class="form-row full-width">
-                <label for="notes">備註:</label>
-                <textarea id="notes" placeholder="可選填備註..."></textarea>
+                <label for="notes">備註 (選填)</label>
+                <textarea id="notes" placeholder="寫下一些細節..."></textarea>
             </div>
             
-            <button type="submit" class="submit-btn">新增紀錄</button>
+            <button type="submit" class="submit-btn">儲存紀錄</button>
         </form>
 
-        <hr>
+        <hr style="border:0; border-top:1px solid #eee; margin:30px 0;">
 
-        <h2>結算與預算</h2>
-        <div class="budget-input-container">
-            <label for="monthlyBudget">每月支出預算:</label>
-            <input type="number" id="monthlyBudget" placeholder="輸入預算" min="0" value="0">
-            <button id="setBudgetBtn">設定/更新</button>
-        </div>
+        <h2>統計與清單</h2>
         
-        <div class="month-selector">
-            <label for="monthSelect">選擇月份:</label>
-            <select id="monthSelect"></select>
+        <div class="controls-top">
+            <div>
+                <select id="monthSelect"></select>
+            </div>
+            <div class="budget-group">
+                <input type="number" id="monthlyBudget" placeholder="設定每月預算" min="0" style="width:130px;" inputmode="numeric">
+                <button id="setBudgetBtn">設定預算</button>
+            </div>
         </div>
         
         <div class="summary-container">
             <div class="summary-box">
-                <h4>總收入</h4>
-                <div id="incomeTotal" class="income">0</div>
+                <h4>本月總收入</h4>
+                <div id="incomeTotal" class="summary-val income">0</div>
             </div>
             <div class="summary-box">
-                <h4>總支出</h4>
-                <div id="expenseTotal" class="expense">0</div>
+                <h4>本月總支出</h4>
+                <div id="expenseTotal" class="summary-val expense">0</div>
             </div>
             <div class="summary-box">
-                <h4>結餘</h4>
-                <div id="balance">0</div>
+                <h4>本月結餘</h4>
+                <div id="balance" class="summary-val">0</div>
             </div>
              <div class="summary-box">
                 <h4>預算剩餘</h4>
-                <div id="budgetStatus">未設定</div>
+                <div id="budgetStatus" class="summary-val">未設定</div>
             </div>
         </div>
         
-        <hr>
-
-        <h2>所有紀錄</h2>
         <div class="data-actions">
-            <button id="exportCsvBtn">⬇️ 匯出所有紀錄 (CSV)</button>
+            <button id="exportCsvBtn">📥 匯出紀錄 (CSV)</button>
         </div>
 
         <div class="filter-container">
             <select id="filterType">
-                <option value="">所有類型</option>
+                <option value="">全部類型</option>
                 <option value="income">收入</option>
                 <option value="expense">支出</option>
             </select>
             <select id="filterCategory">
-                <option value="">所有類別</option>
+                <option value="">全部類別</option>
             </select>
-            <input type="text" id="filterKeyword" placeholder="備註/類別關鍵字">
+            <input type="text" id="filterKeyword" placeholder="搜尋備註或類別...">
             <select id="sortOrder">
-                <option value="dateDesc">日期(新→舊)</option>
-                <option value="dateAsc">日期(舊→新)</option>
-                <option value="amountDesc">金額(高→低)</option>
-                <option value="amountAsc">金額(低→高)</option>
+                <option value="dateDesc">日期 (新→舊)</option>
+                <option value="dateAsc">日期 (舊→新)</option>
+                <option value="amountDesc">金額 (高→低)</option>
+                <option value="amountAsc">金額 (低→高)</option>
             </select>
             <button id="clearFiltersBtn">清除篩選</button>
         </div>
@@ -407,7 +395,6 @@
             const otherCategoryInput = document.getElementById('otherCategoryInput');
             const recordTypeSelect = document.getElementById('recordType');
             const dateInput = document.getElementById('date');
-            const quickButtonsContainer = document.getElementById('quickButtons');
 
             const incomeTotalEl = document.getElementById('incomeTotal');
             const expenseTotalEl = document.getElementById('expenseTotal');
@@ -425,19 +412,18 @@
 
             let expenseCategoryPieChart, incomeCategoryPieChart, typePieChart;
 
-            // --- Data Load ---
+            // --- 讀取本機儲存 (Local Storage) ---
             let records = JSON.parse(localStorage.getItem('accountingRecords')) || [];
             let monthlyBudget = parseInt(localStorage.getItem('monthlyBudget')) || 0;
             const defaultCategories = ['飲食', '住宿', '日常用品', '零用錢', '醫療', '交通', '娛樂', '薪資', '投資', '其他'];
             
-            // --- Initialization ---
+            // --- 初始化日期與預算 ---
             const today = new Date();
-            // 處理時區問題，確保預設日期為本地正確日期
             const localDateStr = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
             dateInput.value = localDateStr;
-            monthlyBudgetInput.value = monthlyBudget;
+            monthlyBudgetInput.value = monthlyBudget > 0 ? monthlyBudget : '';
 
-            // 監聽類別選擇，如果是「其他」就顯示自訂輸入框
+            // --- 事件：類別選擇 (處理"其他"選項) ---
             categorySelect.addEventListener('change', (e) => {
                 if (e.target.value === '其他') {
                     otherCategoryInput.style.display = 'block';
@@ -449,10 +435,10 @@
                 }
             });
 
-            // CSV 匯出
+            // --- 匯出 CSV ---
             function exportRecords() {
                 if (records.length === 0) {
-                    alert("沒有任何紀錄可供匯出。");
+                    alert("目前沒有任何紀錄。");
                     return;
                 }
                 const header = ["日期", "類型", "類別", "金額", "備註"];
@@ -465,24 +451,23 @@
                         `"${r.notes ? r.notes.replace(/"/g, '""') : ''}"`
                     ].join(',')
                 );
-                
                 const csvContent = [header.join(','), ...csvRows].join('\n');
                 const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = `記帳紀錄_${localDateStr}.csv`;
+                link.download = `記帳本_${localDateStr}.csv`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             }
 
-            // 設定快速按鈕與篩選器選項
-            function setupCategories() {
+            // --- 設定篩選器類別 ---
+            function setupFilterCategories() {
                 const uniqueCategories = [...new Set(records.map(r => r.category))];
                 const allCategories = [...new Set([...defaultCategories, ...uniqueCategories])];
 
-                // 準備篩選器的類別選單
-                filterCategoryEl.innerHTML = '<option value="">所有類別</option>';
+                const currentFilter = filterCategoryEl.value;
+                filterCategoryEl.innerHTML = '<option value="">全部類別</option>';
                 allCategories.forEach(cat => {
                     if (cat && cat !== '其他') {
                         const option = document.createElement('option');
@@ -491,36 +476,14 @@
                         filterCategoryEl.appendChild(option);
                     }
                 });
-
-                // 產生上方快速按鈕
-                quickButtonsContainer.innerHTML = '';
-                const quickSets = {
-                    '飲食': 'expense', '交通': 'expense', '日常用品': 'expense', 
-                    '薪資': 'income'
-                };
-                
-                for (const [cat, type] of Object.entries(quickSets)) {
-                    const btn = document.createElement('button');
-                    btn.textContent = `${type === 'income' ? '➕' : '➖'} ${cat}`;
-                    btn.className = `${type}-btn`;
-                    btn.type = "button";
-                    btn.addEventListener('click', () => {
-                        recordTypeSelect.value = type;
-                        categorySelect.value = cat;
-                        otherCategoryInput.style.display = 'none';
-                        otherCategoryInput.required = false;
-                        document.getElementById('amount').focus();
-                    });
-                    quickButtonsContainer.appendChild(btn);
-                }
+                filterCategoryEl.value = currentFilter; // 保持原有選擇
             }
 
-            // 初始化月份選單
+            // --- 初始化月份選單 ---
             function initializeMonthSelector() {
                 monthSelect.innerHTML = '';
-                const now = new Date();
-                const currentMonth = now.getMonth();
-                const currentYear = now.getFullYear();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
 
                 for (let i = -12; i <= 1; i++) { 
                     const date = new Date(currentYear, currentMonth + i, 1);
@@ -538,20 +501,18 @@
                 });
             }
             
-            // 設定預算
+            // --- 設定預算 (存入 Local Storage) ---
             setBudgetBtn.addEventListener('click', () => {
-                const newBudget = parseInt(monthlyBudgetInput.value);
+                const newBudget = parseInt(monthlyBudgetInput.value) || 0;
                 if (newBudget >= 0) {
                     monthlyBudget = newBudget;
                     localStorage.setItem('monthlyBudget', monthlyBudget);
-                    alert(`預算已更新為 $${monthlyBudget.toLocaleString()}`);
+                    alert(`✅ 本月預算已更新為 $${monthlyBudget.toLocaleString()}`);
                     updateSummaryAndCharts();
-                } else {
-                    alert("請輸入有效的預算。");
                 }
             });
 
-            // 新增紀錄送出
+            // --- 新增紀錄 (存入 Local Storage) ---
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
 
@@ -562,11 +523,11 @@
                 const date = document.getElementById('date').value;
 
                 if (category === '其他') {
-                    category = otherCategoryInput.value.trim() || '其他';
+                    category = otherCategoryInput.value.trim() || '未分類';
                 }
 
                 if (isNaN(amount) || amount <= 0) {
-                    alert('請輸入大於0的金額！');
+                    alert('金額必須大於0！');
                     return;
                 }
 
@@ -582,7 +543,6 @@
                 records.unshift(newRecord);
                 localStorage.setItem('accountingRecords', JSON.stringify(records));
 
-                // 重設表單，但保留日期
                 const savedDate = dateInput.value;
                 form.reset();
                 dateInput.value = savedDate;
@@ -590,60 +550,62 @@
                 otherCategoryInput.style.display = 'none';
                 otherCategoryInput.required = false;
                 
-                setupCategories();
+                setupFilterCategories();
                 applyFiltersAndSort();
                 updateSummaryAndCharts();
             });
 
-            // 刪除紀錄
+            // --- 刪除紀錄 ---
             window.deleteRecord = function(id) {
                 if (confirm('確定要刪除這筆紀錄嗎？')) {
                     records = records.filter(record => record.id !== id);
                     localStorage.setItem('accountingRecords', JSON.stringify(records));
-                    setupCategories();
+                    setupFilterCategories();
                     applyFiltersAndSort();
                     updateSummaryAndCharts();
                 }
             };
             
-            // 編輯紀錄 (展開編輯表單)
+            // --- 編輯紀錄 (手機版適應表單) ---
             window.editRecord = function(id) {
                 const li = document.querySelector(`#recordList li[data-id="${id}"]`);
                 
                 document.querySelectorAll('.editing').forEach(el => {
                     if (el !== li) el.classList.remove('editing');
                 });
-                applyFiltersAndSort(); // 重新渲染列表以取消其他編輯狀態
+                applyFiltersAndSort(); 
 
                 const record = records.find(r => r.id === id);
                 if (!record) return;
 
-                // 重新抓取一次 DOM，因為剛剛重新渲染過了
                 const targetLi = document.querySelector(`#recordList li[data-id="${id}"]`);
                 targetLi.classList.add('editing');
 
                 targetLi.innerHTML = `
-                    <div class="record-info" style="width: 100%;">
-                        <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
-                            <input type="date" value="${record.date}" id="edit-date-${id}" class="record-edit-input">
-                            <select id="edit-type-${id}" class="record-edit-input">
+                    <div style="width: 100%;">
+                        <div class="edit-row">
+                            <input type="date" value="${record.date}" id="edit-date-${id}">
+                            <select id="edit-type-${id}">
                                 <option value="expense" ${record.type === 'expense' ? 'selected' : ''}>支出</option>
                                 <option value="income" ${record.type === 'income' ? 'selected' : ''}>收入</option>
                             </select>
-                            <input type="text" value="${record.category}" id="edit-category-${id}" class="record-edit-input" placeholder="類別">
-                            <input type="number" value="${record.amount}" id="edit-amount-${id}" class="record-edit-input" min="1" placeholder="金額" style="width: 100px;">
                         </div>
-                        <textarea id="edit-notes-${id}" class="record-edit-input" style="width:100%; resize:vertical; min-height:50px;" placeholder="備註">${record.notes || ''}</textarea>
-                        
-                        <div class="record-actions" style="margin-top: 10px; justify-content: flex-end;">
-                            <button class="save-btn" onclick="saveRecord(${id})">儲存</button>
+                        <div class="edit-row">
+                            <input type="text" value="${record.category}" id="edit-category-${id}" placeholder="類別">
+                            <input type="number" value="${record.amount}" id="edit-amount-${id}" min="1" placeholder="金額" inputmode="numeric">
+                        </div>
+                        <div class="edit-row">
+                            <textarea id="edit-notes-${id}" placeholder="備註..." style="min-height:60px;">${record.notes || ''}</textarea>
+                        </div>
+                        <div class="record-actions">
                             <button class="cancel-btn" onclick="applyFiltersAndSort()">取消</button>
+                            <button class="save-btn" onclick="saveRecord(${id})">儲存</button>
                         </div>
                     </div>
                 `;
             };
 
-            // 儲存編輯紀錄
+            // --- 儲存編輯 ---
             window.saveRecord = function(id) {
                 const index = records.findIndex(r => r.id === id);
                 if (index === -1) return;
@@ -655,7 +617,7 @@
                 const newDate = document.getElementById(`edit-date-${id}`).value;
 
                 if (isNaN(newAmount) || newAmount <= 0 || !newCategory) {
-                    alert('請確認金額大於0且類別已填寫！');
+                    alert('請確認金額與類別填寫正確！');
                     return;
                 }
 
@@ -669,12 +631,12 @@
                 };
                 
                 localStorage.setItem('accountingRecords', JSON.stringify(records));
-                setupCategories();
+                setupFilterCategories();
                 applyFiltersAndSort();
                 updateSummaryAndCharts();
             };
 
-            // 篩選與排序邏輯
+            // --- 篩選與排序 ---
             function applyFiltersAndSort() {
                 const currentMonthValue = monthSelect.value;
                 const [year, month] = currentMonthValue.split('-').map(Number);
@@ -725,11 +687,11 @@
             
             exportCsvBtn.addEventListener('click', exportRecords);
 
-            // 渲染列表 HTML
+            // --- 渲染清單 ---
             function renderRecords(list) {
                 recordList.innerHTML = '';
                 if (list.length === 0) {
-                    recordList.innerHTML = '<li style="justify-content:center; color:#888;">本月尚無符合紀錄</li>';
+                    recordList.innerHTML = '<li style="text-align:center; color:#888; border:none; box-shadow:none; background:transparent;">本月尚無紀錄</li>';
                     return;
                 }
 
@@ -742,23 +704,25 @@
 
                     li.innerHTML = `
                         <div class="record-info">
-                            <span>📅 <strong>${record.date}</strong> <span style="color:#888; font-size:13px;">(${typeText})</span></span>
-                            <span>🏷️ 類別: ${record.category}</span>
-                            ${record.notes ? `<span style="color:#666;">📝 備註: ${record.notes}</span>` : ''}
+                            <div class="record-info-top">
+                                <span class="record-date">${record.date} <span class="record-type-badge">${typeText}</span></span>
+                            </div>
+                            <span style="font-size: 1.1em; color:#444;">🏷️ ${record.category}</span>
+                            ${record.notes ? `<span style="color:#777; font-size: 0.9em; margin-top:5px;">📝 ${record.notes}</span>` : ''}
                         </div>
-                        <div class="record-amount ${amountClass}">
-                            ${sign} $${record.amount.toLocaleString()}
-                        </div>
-                        <div class="record-actions">
-                            <button class="edit-btn" onclick="editRecord(${record.id})">編輯</button>
-                            <button class="delete-btn" onclick="deleteRecord(${record.id})">刪除</button>
+                        <div class="record-amount-container">
+                            <div class="record-amount ${amountClass}">${sign} $${record.amount.toLocaleString()}</div>
+                            <div class="record-actions">
+                                <button class="edit-btn" onclick="editRecord(${record.id})">編輯</button>
+                                <button class="delete-btn" onclick="deleteRecord(${record.id})">刪除</button>
+                            </div>
                         </div>
                     `;
                     recordList.appendChild(li);
                 });
             }
 
-            // 更新統計看板與圖表
+            // --- 更新面板與圖表 ---
             function updateSummaryAndCharts() {
                 const currentMonthValue = monthSelect.value;
                 const [year, month] = currentMonthValue.split('-').map(Number);
@@ -786,26 +750,26 @@
 
                 if (monthlyBudget > 0) {
                     budgetStatusEl.textContent = `$${budgetRemaining.toLocaleString()}`;
-                    budgetStatusEl.className = budgetRemaining < 0 ? 'budget-warning' : 'budget-ok';
+                    budgetStatusEl.style.color = budgetRemaining < 0 ? '#dc3545' : '#28a745';
                 } else {
                     budgetStatusEl.textContent = '未設定';
-                    budgetStatusEl.className = '';
+                    budgetStatusEl.style.color = '#333';
                 }
 
                 updateCharts(currentMonthRecords, incomeTotal, expenseTotal);
             }
 
-            // 更新 Chart.js 圖表
+            // --- Chart.js 畫圖 (防止重疊與縮放問題) ---
             function updateCharts(data, incomeTotal, expenseTotal) {
-                const pieColors = ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40', '#6666ff', '#58c9b9', '#ff8484', '#a1c181'];
+                const pieColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED', '#8A2BE2', '#A52A2A', '#DEB887'];
                 
-                // 這是確保圖表不會無窮放大的核心設定
                 const chartOptions = { 
                     responsive: true, 
-                    maintainAspectRatio: false, // 搭配 CSS 的固定高度，完美限制大小
+                    maintainAspectRatio: false, // 確保符合自訂的 250px 高度
                     plugins: {
-                        legend: { position: 'right' } // 將圖例放右邊，視覺上更緊湊
-                    }
+                        legend: { position: 'right', labels: { boxWidth: 12, font: {size: 13} } }
+                    },
+                    layout: { padding: 10 }
                 };
 
                 // --- 1. Expense Pie ---
@@ -820,10 +784,10 @@
                 
                 if (expAmounts.length > 0) {
                     expenseCategoryPieChart = new Chart(document.getElementById('expenseCategoryPieChart').getContext('2d'), {
-                        type: 'doughnut', // 改成環形圖看起來更現代一點
+                        type: 'doughnut',
                         data: {
                             labels: expCategories,
-                            datasets: [{ data: expAmounts, backgroundColor: pieColors }]
+                            datasets: [{ data: expAmounts, backgroundColor: pieColors, borderWidth: 1 }]
                         },
                         options: chartOptions
                     });
@@ -844,7 +808,7 @@
                         type: 'doughnut',
                         data: {
                             labels: incCategories,
-                            datasets: [{ data: incAmounts, backgroundColor: pieColors }]
+                            datasets: [{ data: incAmounts, backgroundColor: pieColors, borderWidth: 1 }]
                         },
                         options: chartOptions
                     });
@@ -861,7 +825,8 @@
                             labels: ['總收入', '總支出'],
                             datasets: [{
                                 data: [incomeTotal, expenseTotal],
-                                backgroundColor: ['#28a745', '#dc3545']
+                                backgroundColor: ['#28a745', '#dc3545'],
+                                borderWidth: 1
                             }]
                         },
                         options: chartOptions
@@ -870,7 +835,7 @@
             }
 
             // --- 啟動初始化 ---
-            setupCategories();
+            setupFilterCategories();
             initializeMonthSelector();
             applyFiltersAndSort(); 
             updateSummaryAndCharts();
